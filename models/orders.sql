@@ -15,6 +15,7 @@ final as (
         orders.order_id,
         orders.customer_id,
         orders.order_date,
+        orders.status,
         sum(payments.amount) as amount
     from orders
     left join payments using (order_id)
