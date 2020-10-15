@@ -5,6 +5,7 @@ select
     status,
     amount / 100 as amount, -- convert from cents to dollars
     created as created_at
-from raw.stripe.payment
+from {{ source('stripe','payment')}}
+-- raw.stripe.payment
 -- Look at raw.stripe.payments (amount ??, 1:many for orders:payments,)
 -- create a staging layer
