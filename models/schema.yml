@@ -1,5 +1,44 @@
 version: 2
 
+sources:
+  - name: jaffle_shop
+    description: Raw source data from snowflake
+    database: raw
+    tables: 
+      - name: customers
+        columns:
+          - name: id
+            description: Ensure customer IDs are unique
+            tests:
+              - unique
+              - not_null
+      - name: orders
+        columns:
+          - name: status
+            description: Ensure order statuses are valid
+            tests:
+              - accepted_values:
+                  values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+        loaded_at_field: _etl_loaded_at
+        freshness:
+          warn_after: {count: 12, period: hour}
+          error_after: {count: 24, period: hour}
+
+  - name: stripe
+    description: Raw source data from stripe
+    database: raw
+    tables: 
+      - name: payment
+        columns:
+          - name: status
+            description: Ensure payment statuses are not null
+            tests:
+              - not_null
+        loaded_at_field: _etl_loaded_at
+        freshness:
+          warn_after: {count: 12, period: hour}
+          error_after: {count: 24, period: hour}
+
 models:
   - name: customers
     description: One record per customer
@@ -39,3 +78,21 @@ models:
           - relationships:
               to: ref('stg_customers')
               field: customer_id
+
+  - name: orders
+    description: One record per order
+    columns:
+      - name: order_id
+        description: Primary key
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Primary key
+        tests:
+          - not_null
+      - name: status
+        description: "{{ doc ('order_status') }}"
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
